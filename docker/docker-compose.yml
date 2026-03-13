@@ -1,0 +1,89 @@
+services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: paperless
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PAPERLESS_URL: https://pl.kmml.uk
+      PAPERLESS_CSRF_TRUSTED_ORIGINS: https://pl.kmml.uk,http://openclaw:8000,http://192.168.1.115:8000,http://paperless:8000
+      PAPERLESS_ALLOWED_HOSTS: pl.kmml.uk,openclaw,192.168.1.115,paperless
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_DBHOST: db
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBPASS: paperless
+      PAPERLESS_CONSUMER_RECURSIVE: "true"
+      PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"
+    volumes:
+      - data:/usr/src/paperless/data
+      - media:/usr/src/paperless/media
+      - /srv/ai-office/consume:/usr/src/paperless/consume
+      - /srv/ai-office/export:/usr/src/paperless/export
+    depends_on:
+      - redis
+      - db
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+    volumes:
+      - /srv/ai-office/qdrant_storage:/qdrant/storage
+
+  paperless-rag-indexer:
+    build:
+      context: ./paperless-rag
+    container_name: paperless-rag-indexer
+    restart: unless-stopped
+    depends_on:
+      - paperless
+      - qdrant
+    env_file:
+      - ./paperless-rag/.env
+    volumes:
+      - ./paperless-rag/app:/app
+      - ./paperless-rag/state:/state
+    working_dir: /app
+    command: ["python", "indexer.py"]
+
+  paperless-rag-api:
+    build:
+      context: ./paperless-rag
+    container_name: paperless-rag-api
+    restart: unless-stopped
+    depends_on:
+      - paperless
+      - qdrant
+    ports:
+      - "8787:8787"
+    env_file:
+      - ./paperless-rag/.env
+    volumes:
+      - ./paperless-rag/app:/app
+      - ./paperless-rag/state:/state
+    working_dir: /app
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8787"]
+
+volumes:
+  data:
+  media:
+  dbdata:
+  ollama:
+  openwebui:

@@ -1,0 +1,6 @@
+openai
+chromadb
+fastapi
+uvicorn
+requests
+python-dotenv
