@@ -20,8 +20,8 @@ services:
       - "8000:8000"
     environment:
       PAPERLESS_URL: https://pl.kmml.uk
-      PAPERLESS_CSRF_TRUSTED_ORIGINS: https://pl.kmml.uk,http://openclaw:8000,http://192.168.1.115:8000,http://paperless:8000
-      PAPERLESS_ALLOWED_HOSTS: pl.kmml.uk,openclaw,192.168.1.115,paperless
+      PAPERLESS_CSRF_TRUSTED_ORIGINS: http://openclaw:8000,http://192.168.1.115:8000,http://paperless:8000
+      PAPERLESS_ALLOWED_HOSTS: openclaw,192.168.1.115,paperless
       PAPERLESS_REDIS: redis://redis:6379
       PAPERLESS_DBHOST: db
       PAPERLESS_DBNAME: paperless
