@@ -6,7 +6,7 @@ set -euo pipefail
 NAS_SHARE="//192.168.1.112/NetBackup"
 NAS_MOUNT="/mnt/nas_backup"
 NAS_USER="proxmox_smb"
-NAS_PASS="dh8fw28h8790..dw"
+NAS_PASS="ddw"
 
 COMPOSE_DIR="/srv/ai-office"
 CONTAINER="paperless"
